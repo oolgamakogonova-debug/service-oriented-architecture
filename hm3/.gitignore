@@ -1,0 +1,17 @@
+.DS_Store
+.env
+*.log
+
+gen/
+tmp/
+dist/
+bin/
+
+flight-service/go.sum
+booking-service/go.sum
+
+.vscode/
+.idea/
+
+postgres_data/
+redis_data/

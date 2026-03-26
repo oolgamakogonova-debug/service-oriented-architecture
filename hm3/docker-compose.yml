@@ -1,0 +1,107 @@
+services:
+  flight-db:
+    image: postgres:16-alpine
+    container_name: flight-db
+    environment:
+      POSTGRES_DB: flight_db
+      POSTGRES_USER: flight_user
+      POSTGRES_PASSWORD: flight_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - flight-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flight_user -d flight_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app
+
+  booking-db:
+    image: postgres:16-alpine
+    container_name: booking-db
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_user -d booking_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app
+
+  flight-service:
+    build:
+      context: .
+      dockerfile: flight-service/Dockerfile
+    container_name: flight-service
+    environment:
+      DB_HOST: flight-db
+      DB_PORT: "5432"
+      DB_USER: flight_user
+      DB_PASSWORD: flight_pass
+      DB_NAME: flight_db
+      GRPC_PORT: "50051"
+      REDIS_ADDR: redis:6379
+      API_KEY: "super-secret-api-key-2024"
+    ports:
+      - "50051:50051"
+    depends_on:
+      flight-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: booking-service/Dockerfile
+    container_name: booking-service
+    environment:
+      DB_HOST: booking-db
+      DB_PORT: "5432"
+      DB_USER: booking_user
+      DB_PASSWORD: booking_pass
+      DB_NAME: booking_db
+      HTTP_PORT: "8080"
+      FLIGHT_SERVICE_ADDR: flight-service:50051
+      FLIGHT_SERVICE_API_KEY: "super-secret-api-key-2024"
+    ports:
+      - "8080:8080"
+    depends_on:
+      booking-db:
+        condition: service_healthy
+      flight-service:
+        condition: service_started
+    networks:
+      - app
+
+volumes:
+  flight-db-data:
+  booking-db-data:
+
+networks:
+  app:
+    driver: bridge

@@ -1,0 +1,35 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Покупатель")
+Person(seller, "Продавец")
+
+System_Boundary(marketplace, "Marketplace") {
+  Container(web, "Web/Mobile App", "UI")
+  Container(gw, "API Gateway", "HTTP")
+  Container(users, "Users Service", "REST")
+  Container(catalog, "Catalog Service", "REST")
+  Container(feed, "Feed/Recommendation Service", "REST")
+  Container(order, "Order Service", "REST")
+  Container(payment, "Payment Service", "REST")
+  Container(notification, "Notification Service", "REST/Async")
+}
+
+System_Ext(payProvider, "Payment Provider")
+System_Ext(msgProvider, "Email/SMS/Push Provider")
+
+Rel(customer, web, "Использует")
+Rel(seller, web, "Использует")
+Rel(web, gw, "HTTPS")
+
+Rel(gw, users, "REST")
+Rel(gw, catalog, "REST")
+Rel(gw, feed, "REST")
+Rel(gw, order, "REST")
+Rel(gw, payment, "REST")
+
+Rel(payment, payProvider, "API")
+Rel(notification, msgProvider, "API")
+
+@enduml

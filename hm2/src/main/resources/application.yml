@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/shopdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    secret: "ThisIsASuperSecretKeyForJWTTokensThatIsAtLeast256BitsLong1234567890ABCDEF"
+    access-token-expiration-ms: 900000
+    refresh-token-expiration-ms: 604800000
+  order:
+    max-active-orders: 10
+    rate-limit-seconds: 60
