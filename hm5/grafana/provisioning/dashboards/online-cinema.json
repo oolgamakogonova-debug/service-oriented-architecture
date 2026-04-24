@@ -1,0 +1,219 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Events per Hour (Last 24h)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "rawSql": "SELECT toStartOfHour(event_time) AS time, event_type, count() AS cnt FROM cinema.movie_events WHERE event_time >= now() - INTERVAL 24 HOUR GROUP BY time, event_type ORDER BY time ASC",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "id": 2,
+      "title": "Top 10 Movies (Last 7 Days)",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT movie_id, count() AS views FROM cinema.movie_events WHERE event_type = 'VIEW_STARTED' AND event_date >= today() - 7 GROUP BY movie_id ORDER BY views DESC LIMIT 10",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 3,
+      "title": "Events by Device Type",
+      "type": "piechart",
+      "targets": [
+        {
+          "rawSql": "SELECT device_type, count() AS cnt FROM cinema.movie_events WHERE event_date >= today() - 7 GROUP BY device_type ORDER BY cnt DESC",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "id": 4,
+      "title": "Daily Unique Users",
+      "type": "timeseries",
+      "targets": [
+        {
+          "rawSql": "SELECT event_date AS time, uniq(user_id) AS unique_users FROM cinema.movie_events WHERE event_date >= today() - 30 GROUP BY event_date ORDER BY event_date ASC",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "id": 5,
+      "title": "Average Watch Time per Movie (Top 10)",
+      "type": "barchart",
+      "targets": [
+        {
+          "rawSql": "SELECT movie_id, avg(progress_seconds) AS avg_watch_time FROM cinema.movie_events WHERE event_type = 'VIEW_FINISHED' AND event_date >= today() - 7 GROUP BY movie_id ORDER BY avg_watch_time DESC LIMIT 10",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 24 },
+      "id": 6,
+      "title": "Total Events (24h)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT count() AS total FROM cinema.movie_events WHERE event_time >= now() - INTERVAL 24 HOUR",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 24 },
+      "id": 7,
+      "title": "Unique Users (24h)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT uniq(user_id) AS users FROM cinema.movie_events WHERE event_time >= now() - INTERVAL 24 HOUR",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 24 },
+      "id": 8,
+      "title": "Views Started (24h)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT count() AS views FROM cinema.movie_events WHERE event_type = 'VIEW_STARTED' AND event_time >= now() - INTERVAL 24 HOUR",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 24 },
+      "id": 9,
+      "title": "Likes (24h)",
+      "type": "stat",
+      "targets": [
+        {
+          "rawSql": "SELECT count() AS likes FROM cinema.movie_events WHERE event_type = 'LIKED' AND event_time >= now() - INTERVAL 24 HOUR",
+          "format": 1
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["cinema", "kafka", "clickhouse"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 2,
+        "name": "DS_CLICKHOUSE",
+        "query": "grafana-clickhouse-datasource",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "title": "Online Cinema Analytics",
+  "uid": "cinema-analytics-001",
+  "version": 1
+}
