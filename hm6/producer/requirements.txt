@@ -1,0 +1,4 @@
+confluent-kafka[avro,schemaregistry]==2.5.3
+fastavro==1.9.4
+structlog==24.1.0
+requests==2.32.3

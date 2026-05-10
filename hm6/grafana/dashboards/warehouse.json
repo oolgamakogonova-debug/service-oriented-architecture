@@ -1,0 +1,93 @@
+{
+  "uid": "warehouse-consumer",
+  "title": "Warehouse Consumer",
+  "tags": ["warehouse", "kafka", "cassandra"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Consumer Lag по партициям",
+      "id": 1,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "consumer_lag",
+          "legendFormat": "p{{partition}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "min": 0 }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput — events processed per second",
+      "id": 2,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (event_type) (rate(events_processed_total[1m]))",
+          "legendFormat": "{{event_type}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Event processing duration (p50, p95, p99)",
+      "id": 3,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le) (rate(event_processing_duration_seconds_bucket[1m])))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(event_processing_duration_seconds_bucket[1m])))", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum by (le) (rate(event_processing_duration_seconds_bucket[1m])))", "legendFormat": "p99", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cassandra write errors / DLQ",
+      "id": 4,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "rate(cassandra_write_errors_total[1m])", "legendFormat": "cassandra errors/s", "refId": "A" },
+        { "expr": "sum by (error_code) (rate(events_failed_total[1m]))", "legendFormat": "DLQ {{error_code}}/s", "refId": "B" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "type": "stat",
+      "title": "Kafka connection",
+      "id": 5,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "targets": [{ "expr": "kafka_connected", "refId": "A" }],
+      "options": { "colorMode": "background" }
+    },
+    {
+      "type": "stat",
+      "title": "Cassandra connection",
+      "id": 6,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "targets": [{ "expr": "cassandra_connected", "refId": "A" }],
+      "options": { "colorMode": "background" }
+    },
+    {
+      "type": "stat",
+      "title": "Skipped (duplicates / out-of-order) total",
+      "id": 7,
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "expr": "sum by (reason) (events_skipped_total)", "legendFormat": "{{reason}}", "refId": "A" }
+      ]
+    }
+  ]
+}

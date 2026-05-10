@@ -1,0 +1,38 @@
+groups:
+  - name: warehouse-consumer.alerts
+    interval: 10s
+    rules:
+      - alert: ConsumerLagHigh
+        expr: max by (partition) (consumer_lag) > 100
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer lag высок"
+          description: "Партиция {{ $labels.partition }} имеет lag > 100 в течение 30 секунд."
+
+      - alert: ConsumerDown
+        expr: up{job="warehouse-consumer"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Consumer недоступен"
+          description: "Консьюмер не отвечает на скрапинг /metrics уже 30 секунд."
+
+      - alert: CassandraWriteErrors
+        expr: rate(cassandra_write_errors_total[1m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Растёт частота ошибок записи в Cassandra"
+          description: "Более 0.1 ошибок в секунду в течение минуты."
+
+      - alert: HighEventFailureRate
+        expr: rate(events_failed_total[2m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокая доля событий уходит в DLQ"

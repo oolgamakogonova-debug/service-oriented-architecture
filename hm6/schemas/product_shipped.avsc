@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "ProductShipped",
+  "namespace": "warehouse.events.v1",
+  "doc": "Отгрузка товара со склада",
+  "fields": [
+    {"name": "event_id",   "type": "string"},
+    {"name": "event_type", "type": "string", "default": "PRODUCT_SHIPPED"},
+    {"name": "timestamp",  "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "product_id", "type": "string"},
+    {"name": "zone_id",    "type": "string"},
+    {"name": "quantity",   "type": "long"}
+  ]
+}
