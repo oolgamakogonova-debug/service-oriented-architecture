@@ -1,0 +1,82 @@
+# ──────────────────────────────────────────────────────────────────
+# Alert rules как код (ДЗ №7, п.9). Покрывают 4 из 4 рекомендованных
+# ситуаций: высокий error rate, высокая latency, consumer lag, target down.
+# Часть алертов завязана на SLI из recording_rules.yml (п.10): при
+# пересечении порога отказа алерт переходит в firing.
+# ──────────────────────────────────────────────────────────────────
+groups:
+  # ── Алерты на SLI (system-level) ────────────────────────────────
+  - name: slo.alerts
+    interval: 15s
+    rules:
+      - alert: HighErrorRate
+        # порог отказа SLI availability: < 95% (>5% ошибок) в течение 5 минут
+        expr: sli:api_availability:ratio_5m < 0.95
+        for: 1m
+        labels:
+          severity: critical
+          sli: availability
+        annotations:
+          summary: "Высокий error rate WMS-API"
+          description: "Availability {{ printf \"%.3f\" $value }} (< 0.95) более 1 минуты."
+
+      - alert: HighLatencyP95
+        # порог отказа SLI latency: p95 > 1s в течение 5 минут
+        expr: sli:api_latency_p95_seconds:5m > 1
+        for: 1m
+        labels:
+          severity: warning
+          sli: latency
+        annotations:
+          summary: "Высокая p95 latency WMS-API"
+          description: "p95 = {{ printf \"%.3f\" $value }}s (> 1s) более 1 минуты."
+
+      - alert: EventProcessingSlow
+        expr: sli:event_processing_p95_seconds:5m > 1
+        for: 2m
+        labels:
+          severity: warning
+          sli: event_processing
+        annotations:
+          summary: "Медленная обработка событий консьюмером"
+          description: "p95 обработки события = {{ printf \"%.3f\" $value }}s (> 1s)."
+
+  # ── Инфраструктурные алерты ─────────────────────────────────────
+  - name: warehouse.alerts
+    interval: 10s
+    rules:
+      - alert: TargetDown
+        expr: up{job=~"wms-api|warehouse-consumer"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервис недоступен"
+          description: "Target {{ $labels.job }} ({{ $labels.instance }}) не скрапится 30s."
+
+      - alert: ConsumerLagHigh
+        expr: max by (partition) (consumer_lag) > 100
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокий consumer lag"
+          description: "Партиция {{ $labels.partition }}: lag > 100 в течение 30s."
+
+      - alert: CassandraWriteErrors
+        expr: rate(cassandra_write_errors_total[1m]) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ошибки записи в Cassandra"
+          description: "Более 0.1 ошибок/с в течение минуты."
+
+      - alert: HighEventFailureRate
+        expr: rate(events_failed_total[2m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Много событий уходит в DLQ"
+          description: "Скорость отказов событий > 0.5/с в течение 2 минут."

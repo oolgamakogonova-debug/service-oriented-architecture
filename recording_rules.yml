@@ -1,0 +1,34 @@
+# ──────────────────────────────────────────────────────────────────
+# Recording rules — System-level SLI (ДЗ №7, п.10).
+# SLI считаются из «сырых» метрик Prometheus, а не задаются константами.
+# Используются: в Grafana, в alert-правилах (alerts.yml) и в scripts/slo_check.py.
+# ──────────────────────────────────────────────────────────────────
+groups:
+  - name: sli.rules
+    interval: 15s
+    rules:
+      # SLI-1: API availability — доля НЕ-5xx запросов за 5 минут (0..1).
+      - record: sli:api_availability:ratio_5m
+        expr: |
+          1 - (
+            (sum(rate(http_requests_total{status=~"5.."}[5m])) or vector(0))
+            /
+            clamp_min(sum(rate(http_requests_total[5m])), 1)
+          )
+
+      # SLI-2: API latency p95 (секунды) за 5 минут.
+      - record: sli:api_latency_p95_seconds:5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(http_request_duration_seconds_bucket[5m]))
+          )
+
+      # SLI-3: Event processing delay p95 (секунды) — задержка обработки
+      # события консьюмером (от парсинга до коммита) за 5 минут.
+      - record: sli:event_processing_p95_seconds:5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(event_processing_duration_seconds_bucket[5m]))
+          )

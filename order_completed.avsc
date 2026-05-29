@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "OrderCompleted",
+  "namespace": "warehouse.events.v1",
+  "doc": "Завершение заказа: отгрузка зарезервированных товаров (reserved -= quantity)",
+  "fields": [
+    {"name": "event_id",   "type": "string"},
+    {"name": "event_type", "type": "string", "default": "ORDER_COMPLETED"},
+    {"name": "timestamp",  "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "order_id",   "type": "string"}
+  ]
+}
